@@ -1,5 +1,8 @@
 from pydantic import EmailStr
 from sqlmodel import Field, Relationship, SQLModel
+from pydantic import BaseModel
+from datetime import datetime
+from strenum import StrEnum
 
 
 # Shared properties
@@ -108,3 +111,63 @@ class TokenPayload(SQLModel):
 class NewPassword(SQLModel):
     token: str
     new_password: str = Field(min_length=8, max_length=40)
+
+# https://prod-api.exgold.co.kr/api/v1/main/detail/domestic/price
+# {
+#     "success": true,
+#     "message": null,
+#     "data": {
+#         "domesticLivePriceDtoList": [
+#             {
+#                 "type": "Pt",
+#                 "domesticPrice": 44463,
+#                 "domesticPriceDon": 166737,
+#                 "fluctuation": -204
+#             },
+#             {
+#                 "type": "Pd",
+#                 "domesticPrice": 43507,
+#                 "domesticPriceDon": 163152,
+#                 "fluctuation": 606
+#             },
+#             {
+#                 "type": "Au",
+#                 "domesticPrice": 103554,
+#                 "domesticPriceDon": 388328,
+#                 "fluctuation": 158
+#             },
+#             {
+#                 "type": "Ag",
+#                 "domesticPrice": 1300.9,
+#                 "domesticPriceDon": 4879,
+#                 "fluctuation": -2.1
+#             }
+#         ],
+#         "regdate": "2024-06-29T06:00:10"
+#     }
+# }
+# Shared properties
+class GoldType(StrEnum):
+   Pt = "Pt"
+   Pd = "Pd"
+   Au = "Au"
+   Ag = "Ag" 
+
+
+class Price(SQLModel):
+    type: GoldType
+    domesticPrice: float
+    domesticPriceDon: float
+    fluctuation: float
+
+
+class PriceList(SQLModel):
+    domesticLivePriceDtoList : list[Price]
+
+
+class PriceResponse(BaseModel):
+    data: PriceList
+    regdate: datetime
+    success: bool
+    message: str | None
+    
